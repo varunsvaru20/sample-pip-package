@@ -17,26 +17,18 @@ jobs:
         with:
           python-version: "3.8"
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-region: us-east-1 # Adjust to your region
+          role-to-assume: arn:aws:iam::022499047781:role/RepositoryPublisherRole
+          role-session-name: RepoPublishPackage
+          role-duration-seconds: 900
+
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install setuptools wheel twine boto3
-
-      - name: Assume Role and Set Temporary Credentials
-        run: |
-          ROLE_ARN="arn:aws:iam::022499047781:role/RepositoryPublisherRole"
-          SESSION_NAME="GitHubActionSession"
-
-          # Assume the role and get temporary credentials
-          ASSUME_ROLE_OUTPUT=$(aws sts assume-role --role-arn $ROLE_ARN --role-session-name $SESSION_NAME)
-
-          # Extract and export temporary credentials
-          export AWS_ACCESS_KEY_ID=$(echo $ASSUME_ROLE_OUTPUT | jq -r '.Credentials.AccessKeyId')
-          export AWS_SECRET_ACCESS_KEY=$(echo $ASSUME_ROLE_OUTPUT | jq -r '.Credentials.SecretAccessKey')
-          export AWS_SESSION_TOKEN=$(echo $ASSUME_ROLE_OUTPUT | jq -r '.Credentials.SessionToken')
-
-          # Verify the credentials
-          aws sts get-caller-identity
 
       - name: Build and Publish to CodeArtifact
         run: |
